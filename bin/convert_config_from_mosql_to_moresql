@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'json'
+
+FILEPATH = ARGV[0] || "collections.yml"
+FILEOUT = ARGV[1] || "moresql.json"
+yaml = YAML.load_file(FILEPATH)
+
+def convert_columns(cols)
+  ordered_cols = []
+  result = {}
+  if cols == nil
+    return result, ordered_cols
+  end
+
+  cols.each_with_object({}) do |kv, acc|
+    k, v = kv.to_a.first
+    case v
+    when String
+      result[k] = v
+    else
+      # Get the key from kv
+      k = kv.invert[nil]
+      result[kv[:source]] = {
+        mongo: {name: kv[:source] , type: kv[:type]},
+        export: {name: k, type: kv[:type]},
+      }
+      ordered_cols << k
+    end
+  end
+  return result, ordered_cols
+end
+
+result = yaml.each_with_object({}) do |m, acc|
+  db, collections = m
+  acc[db] = {}
+  acc[db]["collections"] = {}
+  collections.each do |name, v|
+    schema = v[:meta][:schema]
+    if schema == nil
+      schema = "public"
+    end
+    collection = {'name' => v[:meta][:table], 'schema'=> schema}
+    extra_props = v[:meta][:extra_props]
+    export = v[:meta][:export]
+    all_field = v[:meta][:all_field]
+    exclude = v[:exclude]
+    if extra_props != nil
+        collection['extra_props'] = extra_props
+    end
+
+    if all_field != nil
+        collection['all_field'] = all_field
+    end
+    
+    if export == nil
+        export = "postgres"
+    end
+
+    if exclude != nil
+        collection['exclude'] = exclude
+    end
+    collection['export'] = export
+    
+    cols, ordered_cols = convert_columns(v[:columns])
+    
+    collection['fields'], collection['ordered_cols'] = cols, ordered_cols
+
+    colls = acc[db]["collections"]
+    colls[name] = collection
+  end
+end
+
+File.write(FILEOUT, JSON.pretty_generate(result))

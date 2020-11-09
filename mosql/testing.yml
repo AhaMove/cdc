@@ -1,0 +1,25 @@
+database: # name db in mongodb
+  collection: # name collection in mongodb
+    :columns:
+    - id: # field in sync db
+      :source: _id  # field mongodb
+      :type: TEXT
+    - time:
+      :source: time
+      :type: DOUBLE PRECISION
+    - status:
+      :source: status 
+      :type: JSONB
+    - create_time:
+      :source: create_time
+      :type: DOUBLE PRECISION
+    - received_time:
+      :source: received_time
+      :type: DOUBLE PRECISION
+    - assign_type:
+      :source: assign_type
+      :type: TEXT
+    :meta:
+      :table: order_notify #name table in synced db
+      :schema: custom # if using pg, default public. Ex: public.order_notify
+      :extra_props: JSONB # if not define any above fields, other is added in _extra_props field
