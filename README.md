@@ -47,11 +47,14 @@ Beside, Dockerlize project and sync data from json file to postgres.
 b. To mongo
 
 ```
-testing:
-    :meta:
-      :table: testing
-      :all_field: true
+{db_name}:
+    {collection_name}:
+        :meta:
+        :table: testing
+        :all_field: true
 ```
+
+If specific fields, using example in postgres or csv
 
 ### Convert yml to json
 
@@ -163,5 +166,5 @@ docker run -d --name {name_container} \
 -e 'CHECK_POINT=true' \
 -v {path_to_save_log}:/var/log/cdc \
 -v {path_to_bin}:/app/bin \
-asia.gcr.io/aha-move/cdc
+{image_name}
 ```
