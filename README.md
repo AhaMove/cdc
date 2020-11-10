@@ -54,7 +54,7 @@ b. To mongo
         :all_field: true
 ```
 
-If specific fields, using example in postgres or csv
+For specific fields, using example in postgres or csv
 
 ### Convert yml to json
 
