@@ -1,9 +1,9 @@
-# MoreSQL
+# CDC: change data captupre
 
 ## Introduction
 
 Customizing from [moresql](https://github.com/zph/moresql), add \_extra_props, exclude field, export to CSV, postgres, mongodb using optlog or change stream.
-Dockerlize project
+Beside, Dockerlize project and sync data from json file to postgres.
 
 # Usage
 
@@ -11,8 +11,7 @@ Dockerlize project
 
 ### Create config is just same mosql
 
-1. Example
-   a. To Postgres, csv
+1. To Postgres, csv
 
 ```
 {db_name}: # name db in mongodb
@@ -133,7 +132,13 @@ Note: Just save into postgres
 
 ```
 
-MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}.json --full-sync
+MONGO_URL="" POSTGRES_URL="" go run cmds/moresql/main.go -config-file=./bin/{file_name}.json --full-sync
+```
+
+### Sync File to PG
+
+```
+go run cmds/moresql/main.go --sync-file --sync-file-path={path_to_file_sync}.json --sync-file-collection={pg_table_name} --sync-file-database={pg_database_name} -config-file=./bin/{file_name}.json
 ```
 
 ## Dockerlize
