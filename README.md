@@ -2,44 +2,68 @@
 
 ## Introduction
 
-Customizing from [moresql](https://github.com/zph/moresql), add \_extra_props, export to CSV, postgres using optlog or change stream
+Customizing from [moresql](https://github.com/zph/moresql), add \_extra_props, exclude field, export to CSV, postgres, mongodb using optlog or change stream.
+Dockerlize project
 
 # Usage
-
-## Setup
-
-```
-go get -u gitlab.com/ahamove/cdc
-```
-
-This is private project, if local, use can basic auth, ssh key
-Or clone project
 
 ## Prerequisite
 
 ### Create config is just same mosql
 
+1. Example
+   a. To Postgres, csv
+
+```
+{db_name}: # name db in mongodb
+  {collection_name}: # name collection in mongodb
+    :columns:
+    - id: # field in sync db
+      :source: _id  # field mongodb
+      :type: TEXT
+    - time:
+      :source: time
+      :type: DOUBLE PRECISION
+    - status:
+      :source: status
+      :type: JSONB
+    - create_time:
+      :source: create_time
+      :type: DOUBLE PRECISION
+    - received_time:
+      :source: received_time
+      :type: DOUBLE PRECISION
+    - assign_type:
+      :source: assign_type
+      :type: TEXT
+    :meta:
+      :table: order_notify # (required) name table in synced db
+      :schema: custom # (option) if using pg, default public. Ex: custom.order_notify
+      :extra_props: JSONB # (option) if not define any above fields, other is added in _extra_props field
+    :exclude: # (option) if received data has below fields, it will skip
+      - time
+      - assign_type
+```
+
+b. To mongo
+
+```
+testing:
+    :meta:
+      :table: testing
+      :all_field: true
+```
+
 ### Convert yml to json
 
 ```
-cd go/src/go/src/gitlab.com/ahamove/cdc
 ruby ./bin/convert_config_from_mosql_moresql ./bin/{file_name}.yml ./bin/{file_name}.json
-```
-
-In /bin has some example
-
-### Setup env variable
-
-```
-cd go/src/go/src/gitlab.com/ahamove/cdc
-make setup_moresql
 ```
 
 ### Create database in postgres
 
 ```
-cd go/src/go/src/gitlab.com/ahamove/cdc
-MONGO_URL="" POSTGRES_URL="" moresql -config-file=./bin/{file_name}.json -validate
+MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}.json -validate
 ```
 
 - After validate: 2 cases
@@ -91,11 +115,48 @@ MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}
 MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}.json --tail --app-name={app_name} --checkpoint --tail-type={optlog|change-stream}
 ```
 
+Run background
+
+```
+MONGO_URL=$MONGO_URL POSTGRES_URL=$POSTGRES_URL LOG_LEVEL=info LOG_PATH=$LOG_PATH nohup moresql --config-file={path_to_bin}/{config_name}.json --tail --checkpoint --app-name={app_name} --tail-type=change-stream --allow-deletes=false --replay-duration=20m > {path_to_save_logg}/{log_name}.out 2>&1 &
+```
+
+3. Save into mongo
+
+```
+MONGO_URL="" MONGO_EXPORT_URL="" EXPORTS=mongo go run cmds/moresql/main.go --tail --checkpoint --app-name={app_name} --tail-type=change-stream --allow-deletes=false --config-file=./bin/{file_name}.json
+```
+
 ### Full Sync
 
 Note: Just save into postgres
 
 ```
 
-MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}.json -full-sync
+MONGO_URL="" POSTGRES_URL="" cmds/moresql/main.go -config-file=./bin/{file_name}.json --full-sync
+```
+
+## Dockerlize
+
+1. Build image
+
+```
+docker build -t {name_image} . --rm
+```
+
+2. Start
+
+```
+docker run -d --name {name_container} \
+-e 'POSTGRES_URL=' \
+-e 'MONGO_URL=' \
+-e 'TAIL=1' \
+-e 'CONFIG_FILE=/app/bin/{file_config}.json' \
+-e 'LOG_LEVEL=info' \
+-e 'TAIL_TYPE=change-stream' \
+-e 'APP_NAME={app_name}' \
+-e 'CHECK_POINT=true' \
+-v {path_to_save_log}:/var/log/cdc \
+-v {path_to_bin}:/app/bin \
+asia.gcr.io/aha-move/cdc
 ```
