@@ -1,4 +1,4 @@
-# CDC: change data captupre
+# CDC: change data capture
 
 ## Introduction
 
