@@ -35,10 +35,15 @@ Beside, Dockerlize project and sync data from json file to postgres.
     - assign_type:
       :source: assign_type
       :type: TEXT
+    - delivery:
+      :source: delivery
+      :type: TEXT
     :meta:
       :table: order_notify # (required) name table in synced db
       :schema: custom # (option) if using pg, default public. Ex: custom.order_notify
       :extra_props: JSONB # (option) if not define any above fields, other is added in _extra_props field
+      :condition_field: delivery # (option) this field allows filtering data when streaming, the field must be defined in "columns" above
+      :condition_value: ahamove # (option) this value of the condition_field field allows filtering data when streaming, only support equal compare at the present
     :exclude: # (option) if received data has below fields, it will skip
       - time
       - assign_type
