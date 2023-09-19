@@ -46,8 +46,19 @@ result = yaml.each_with_object({}) do |m, acc|
     export = v[:meta][:export]
     all_field = v[:meta][:all_field]
     exclude = v[:exclude]
+    condition_field = v[:meta][:condition_field]
+    condition_value = v[:meta][:condition_value]
+    
     if extra_props != nil
         collection['extra_props'] = extra_props
+    end
+
+    if condition_field != nil
+      collection['condition_field'] = condition_field
+    end
+
+    if condition_value != nil
+      collection['condition_value'] = condition_value
     end
 
     if all_field != nil

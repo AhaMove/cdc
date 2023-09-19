@@ -47,6 +47,7 @@ func InitByFlag(e *Env) {
 	flag.BoolVar(&e.SSLInsecureSkipVerify, "ssl-insecure-skip-verify", false, "Skip verification of Mongo SSL certificate ala sslAllowInvalidCertificates")
 	flag.IntVar(&e.postgresMaxOpenConns, "postgres-max-open-connections", 20, "Max opening connection in postgres")
 	flag.BoolVar(&e.justInsert, "just-insert", false, "Actions db collected: update, delete will be update, delete in db export, respective. If just-insert set true, others actions become insert")
+	flag.BoolVar(&e.skipError, "skip-error", false, "Action whether stop or not application when meeting error")
 	flag.Parse()
 }
 
@@ -62,9 +63,17 @@ func InitByEnv(e *Env) {
 	if len(os.Getenv("APP_ENV")) > 0 {
 		e.appEnvironment = os.Getenv("APP_ENV")
 	}
+
 	if len(os.Getenv("CONFIG_FILE")) > 0 {
 		e.configFile = os.Getenv("CONFIG_FILE")
 	}
+
+	if len(os.Getenv("ALLOW_DELETES")) > 0 {
+		if allowDeletes, err := strconv.ParseBool(os.Getenv("ALLOW_DELETES")); err == nil {
+			e.allowDeletes = allowDeletes
+		}
+	}
+
 	if sync, err := strconv.ParseBool(os.Getenv("SYNC")); err == nil && sync {
 		e.sync = sync
 	}
@@ -136,6 +145,10 @@ func InitByEnv(e *Env) {
 	if justInsert, err := strconv.ParseBool(os.Getenv("JUST_INSERT")); err == nil && justInsert {
 		e.justInsert = justInsert
 	}
+
+	if skipError, err := strconv.ParseBool(os.Getenv("SKIP_ERROR")); err == nil && skipError {
+		e.skipError = skipError
+	}
 }
 
 func FetchEnvsAndFlags() (e Env) {
@@ -145,7 +158,7 @@ func FetchEnvsAndFlags() (e Env) {
 	if e.appEnvironment == "" {
 		e.appEnvironment = "production"
 	}
-	if e.replayDuration != time.Duration(0*time.Second) && e.replaySecond != 0 {
+	if e.replayDuration != 0*time.Second && e.replaySecond != 0 {
 		e.replayOplog = true
 	} else {
 		e.replayOplog = false
@@ -246,6 +259,12 @@ func SanitizeData(c Collection, op *gtm.Op, hasExtraProps bool, isMongoExport bo
 		output[v.Export.Name] = value
 	}
 
+	if len(c.ConditionField) > 0 && len(c.ConditionValue) > 0 {
+		if output[c.ConditionField] != c.ConditionValue {
+			return nil, nil
+		}
+	}
+
 	// Normalize data map to always include the Id with conversion
 	// Required for delete actions that have a missing _id field in
 	// op.Data. Must occur after the preceeding iterative block
@@ -314,6 +333,12 @@ func SanitizeDataFile(c Collection, in string, hasExtraProps bool) (map[string]i
 			continue
 		}
 		output[v.Export.Name] = value
+	}
+
+	if len(c.ConditionField) > 0 && len(c.ConditionValue) > 0 {
+		if output[c.ConditionField] != c.ConditionValue {
+			return nil, nil
+		}
 	}
 
 	if hasExtraProps {

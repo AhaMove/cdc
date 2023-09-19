@@ -101,6 +101,10 @@ ForStatement:
 			}
 			o, coll := z.statementFromDbCollection(e.MongoDB, e.Collection)
 			op, err := BuildOpFromMgo(o.mongoFields(), e, coll)
+			if (op.Data == nil) {
+				// Data doesn't exist, skip
+				break
+			}
 			if err != nil {
 				log.WithFields(log.Fields{"description": err, "data": e.Data}).Error("Error BuildOpFromMgo")
 				os.Exit(1)

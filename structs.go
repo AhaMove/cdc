@@ -61,6 +61,7 @@ type Env struct {
 	exports               string
 	csvPathFile           string
 	justInsert            bool
+	skipError             bool
 }
 
 func (e *Env) UseSSL() (r bool) {
@@ -331,13 +332,15 @@ type FieldShorthand map[string]string
 type FieldsWrapper map[string]json.RawMessage
 
 type Collection struct {
-	Name        string   `json:"name"`
-	Schema      string   `json:"schema"`
-	Fields      Fields   `json:"fields"`
-	ExtraProps  string   `json:"extra_props"`
-	OrderedCols []string `json:"ordered_cols"`
-	Exclude     []string `json:"exclude"`
-	AllField    bool     `json:"all_field"`
+	Name        string   	`json:"name"`
+	Schema      string   	`json:"schema"`
+	Fields      Fields   	`json:"fields"`
+	ExtraProps  string   	`json:"extra_props"`
+	OrderedCols []string 	`json:"ordered_cols"`
+	Exclude     []string 	`json:"exclude"`
+	AllField    bool     	`json:"all_field"`
+	ConditionField string `json:"condition_field"`
+	ConditionValue string `json:"condition_value"`
 }
 
 type CollectionDelayed struct {
@@ -348,6 +351,8 @@ type CollectionDelayed struct {
 	OrderedCols []string        `json:"ordered_cols"`
 	Exclude     []string        `json:"exclude"`
 	AllField    bool            `json:"all_field"`
+	ConditionField string 			`json:"condition_field"`
+	ConditionValue string 			`json:"condition_value"`
 }
 
 func (c Collection) pgTableQuoted() string {

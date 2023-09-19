@@ -63,6 +63,8 @@ func (t *Tailer) exportCSV(op *gtm.Op, coll Collection, data map[string]interfac
 		t.counters[csvExport].insert.Incr(1)
 	case op.IsUpdate():
 		t.counters[csvExport].update.Incr(1)
+	default:
+		t.counters[csvExport].skipped.Incr(1)
 	}
 }
 
@@ -106,14 +108,16 @@ func (t *Tailer) exportPostgres(o Statement, op *gtm.Op, data map[string]interfa
 		t.counters[postgresExport].delete.Incr(1)
 		log.WithFields(log.Fields{
 			"data":  data,
-			"query": o.BuildUpsert(),
+			"query": o.BuildDelete(),
 		}).Debug("delete")
 		_, err := t.pg.NamedExec(o.BuildDelete(), data)
 		t.logFn(err, workerType, payload)
+	default:
+		t.counters[postgresExport].skipped.Incr(1)
 	}
 }
 
-func (t *Tailer) exportMongo(o Statement, op *gtm.Op, data map[string]interface{}, workerType string) {
+func (t *Tailer) exportMongo(op *gtm.Op, data map[string]interface{}, workerType string) {
 	collection := t.clientExport.Database(op.GetDatabase()).Collection(op.GetCollection())
 	payload := map[string]interface{}{
 		"action":     op.Operation,
@@ -154,6 +158,8 @@ func (t *Tailer) exportMongo(o Statement, op *gtm.Op, data map[string]interface{
 		t.counters[mongoExport].delete.Incr(1)
 		_, err := collection.DeleteOne(context.Background(), bson.M{"_id": op.Id})
 		t.logFn(err, workerType, payload)
+	default:
+		t.counters[mongoExport].skipped.Incr(1)
 	}
 }
 
@@ -169,6 +175,8 @@ func (t *Tailer) logFn(e error, workerType string, payload map[string]interface{
 			"payload": payload,
 			"error":   e,
 		}).Error(fmt.Sprintf("%s worker processed", workerType))
-		os.Exit(1)
+		if !t.env.skipError {
+			os.Exit(1)
+		}
 	}
 }

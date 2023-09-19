@@ -448,10 +448,11 @@ func (t *Tailer) processOp(op Op, workerType string) {
 	o, c := st.statementFromDbCollection(db, collectionName)
 	isMongoExport := op.export == mongoExport
 	data, err := SanitizeData(c, op.data, len(c.ExtraProps) > 0, isMongoExport)
+	
 	if err != nil {
 		log.WithFields(log.Fields{"collection": collectionName,"error": err, "data": op.data.Data}).Fatal("Error SanitizeData")
 	}
-
+	
 	if data["id"] == nil {
 		return
 	}
@@ -465,7 +466,7 @@ func (t *Tailer) processOp(op Op, workerType string) {
 	}
 
 	if isMongoExport {
-		t.exportMongo(o, op.data, data, workerType)
+		t.exportMongo(op.data, data, workerType)
 	}
 }
 

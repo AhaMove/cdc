@@ -28,7 +28,7 @@ func LoadConfigString(s string) (Config, error) {
 			if v.Schema != "" {
 				schema = v.Schema
 			}
-			coll := Collection{Name: v.Name, Schema: schema, ExtraProps: v.ExtraProps, OrderedCols: v.OrderedCols, Exclude: v.Exclude, AllField: v.AllField}
+			coll := Collection{Name: v.Name, Schema: schema, ExtraProps: v.ExtraProps, OrderedCols: v.OrderedCols, Exclude: v.Exclude, AllField: v.AllField, ConditionField: v.ConditionField, ConditionValue: v.ConditionValue}
 			fields, err := JsonToFields(string(v.Fields))
 			if err != nil {
 				log.Warnf("JSON Config decoding error: ", err)

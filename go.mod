@@ -16,8 +16,8 @@ require (
 	github.com/serialx/hashring v0.0.0-20190515033939-7706f26af194
 	github.com/sirupsen/logrus v1.6.0
 	github.com/thejerf/suture v3.0.3+incompatible
-	github.com/tidwall/gjson v1.9.3
-	go.mongodb.org/mongo-driver v1.5.1
+	github.com/tidwall/gjson v1.6.0
+	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	google.golang.org/appengine v1.6.6 // indirect
